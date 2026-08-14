@@ -1,23 +1,42 @@
 services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: mac-mini-media
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_SERVE_CONFIG=/config/serve.json
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - ./ts-config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+
   navidrome:
     image: deluan/navidrome:latest
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
     user: 501:20 # should be owner of volumes
-    ports:
-      - "4533:4533"
-    restart: always
-    # environment:
-      # Optional: put your config options customization here. Examples:
-      # ND_LOGLEVEL: debug
     volumes:
-      - "/Volumes/navidrome/data:/data"
-      - "/Volumes/navidrome/music:/music:ro"
+      - ${NAVIDROME_DATA_PATH}:/data
+      - ${MUSIC_PATH}:/music:ro
+    restart: unless-stopped
 
   filebrowser:
     image: gtstef/filebrowser:beta
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
     volumes:
-      - /Volumes/navidrome/music:/folder # Do not use a root "/" directory or include the "/var" folder
+      - ${MUSIC_PATH}:/folder
       - ./filebrowser-data:/home/filebrowser/data
-    ports:
-      - 8080:80 # exposes port 80 to host, the left-side number can be changed without config.yaml changes.
-    restart: always
+    restart: unless-stopped
+
+volumes:
+  tailscale-state:
 

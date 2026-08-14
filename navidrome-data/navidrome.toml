@@ -1,0 +1,11 @@
+Agents = "apple-music,deezer,lastfm,listenbrainz"
+
+Scanner.Schedule = '@every 24h'
+
+[Plugins]
+Enabled = true
+AutoReload = true              # Useful during development/testing
+LogLevel = "debug"             # Enable detailed plugin logging
+CacheSize = "200MB"            # WASM compilation cache size
+
+
