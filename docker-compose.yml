@@ -1,0 +1,23 @@
+services:
+  navidrome:
+    image: deluan/navidrome:latest
+    user: 501:20 # should be owner of volumes
+    ports:
+      - "4533:4533"
+    restart: always
+    # environment:
+      # Optional: put your config options customization here. Examples:
+      # ND_LOGLEVEL: debug
+    volumes:
+      - "/Volumes/navidrome/data:/data"
+      - "/Volumes/navidrome/music:/music:ro"
+
+  filebrowser:
+    image: gtstef/filebrowser:beta
+    volumes:
+      - /Volumes/navidrome/music:/folder # Do not use a root "/" directory or include the "/var" folder
+      - ./filebrowser-data:/home/filebrowser/data
+    ports:
+      - 8080:80 # exposes port 80 to host, the left-side number can be changed without config.yaml changes.
+    restart: always
+
