@@ -1,7 +1,14 @@
 # Self-hosted music streaming server
 
-## Services
-- refer `docker-compose.yml`
+## About
+Build a music streaming server on your local computer and use it from outside the LAN. 
+
+### Requirements
+- Docker
+- Tailscale account and an auth key
+
+### Services
+- refer `docker-compose.yml` for details
 
 1. Navidrome
     - Music streaming
@@ -23,3 +30,4 @@
 
 ## Scripts
 - In `/metadata-utils`, there is (are) some scripts to tidy metadata.
+
