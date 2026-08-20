@@ -37,6 +37,41 @@ services:
       - ./filebrowser-data:/home/filebrowser/data
     restart: unless-stopped
 
+  glances:
+    image: nicolargo/glances:latest
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    pid: host
+    environment:
+      - GLANCES_OPT=-w
+    volumes:
+      - /proc:/host/proc:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+  netdata:
+    image: netdata/netdata:latest
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - netdata-config:/etc/netdata
+      - netdata-lib:/var/lib/netdata
+      - netdata-cache:/var/cache/netdata
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
 volumes:
   tailscale-state:
-
+  netdata-config:
+  netdata-lib:
+  netdata-cache:
