@@ -33,7 +33,7 @@ services:
     depends_on:
       - tailscale
     volumes:
-      - ${MUSIC_PATH}:/folder
+      - ${FILES_PATH}:/folder
       - ./filebrowser-data:/home/filebrowser/data
     restart: unless-stopped
 
