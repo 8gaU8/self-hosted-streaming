@@ -4,3 +4,6 @@ server:
     - path: /folder # Do not use a root "/" directory or include the "/var" folder
       config:
         defaultEnabled: true
+
+http:
+  port: 8080

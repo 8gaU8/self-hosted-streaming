@@ -16,6 +16,15 @@ services:
       - NET_RAW
     restart: unless-stopped
 
+  landing:
+    image: nginx:alpine
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    volumes:
+      - ./landing:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
   navidrome:
     image: deluan/navidrome:latest
     network_mode: service:tailscale

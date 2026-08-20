@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Media Server</title>
+    <style>
+      body {
+        font-family: -apple-system, sans-serif;
+        background: #1a1a1a;
+        color: #eee;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        gap: 16px;
+      }
+      a {
+        display: block;
+        padding: 16px 32px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 20px;
+        width: 240px;
+        text-align: center;
+      }
+      a:hover {
+        background: #444;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Media Server</h1>
+    <a id="navidrome-link">Navidrome</a>
+    <a id="filebrowser-link">File Browser</a>
+    <a id="glances-link">Glances</a>
+
+    <script>
+      const host = window.location.hostname;
+      document.getElementById("navidrome-link").href = `http://${host}:4533`;
+      document.getElementById("filebrowser-link").href = `http://${host}:8080`;
+      document.getElementById("glances-link").href = `http://${host}:61208`;
+    </script>
+  </body>
+</html>
