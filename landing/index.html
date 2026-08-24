@@ -36,12 +36,14 @@
     <h1>Media Server</h1>
     <a id="navidrome-link">Navidrome</a>
     <a id="filebrowser-link">File Browser</a>
+    <a id="jellyfin-link">Jellyfin</a>
     <a id="glances-link">Glances</a>
 
     <script>
       const host = window.location.hostname;
       document.getElementById("navidrome-link").href = `http://${host}:4533`;
       document.getElementById("filebrowser-link").href = `http://${host}:8080`;
+      document.getElementById('jellyfin-link').href = `http://${host}:8096`;
       document.getElementById("glances-link").href = `http://${host}:61208`;
     </script>
   </body>

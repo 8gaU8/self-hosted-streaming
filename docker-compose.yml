@@ -59,6 +59,19 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
 
+  jellyfin:
+    image: jellyfin/jellyfin
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    user: 501:20
+    volumes:
+      - ${FILES_PATH}/jellyfin/config:/config
+      - ${FILES_PATH}/jellyfin/cache:/cache
+      - type: bind
+        source: ${FILES_PATH}
+        target: /media
+    restart: 'unless-stopped'
 
 volumes:
   tailscale-state:
