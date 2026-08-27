@@ -69,7 +69,7 @@ services:
       start_period: 10s
       retries: 3
     volumes:
-      - ${FILES_PATH}:/folder
+      - ${MEDIA_PATH}:/media
       - ./filebrowser-data:/home/filebrowser/data
     restart: unless-stopped
     <<: *default-logging 
@@ -95,8 +95,8 @@ services:
       - tailscale
     user: 501:20
     volumes:
-      - ${FILES_PATH}/jellyfin/config:/config
-      - ${FILES_PATH}/jellyfin/cache:/cache
+      - ${JELLYFIN_DATA_PATH}/config:/config
+      - ${JELLYFIN_DATA_PATH}/cache:/cache
       - type: bind
         source: ${MEDIA_PATH}
         target: /media
