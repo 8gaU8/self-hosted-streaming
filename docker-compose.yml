@@ -41,6 +41,13 @@ services:
     network_mode: service:tailscale
     depends_on:
       - tailscale
+    healthcheck:
+      # default port is 80 for healthcheck, but it's changed at /filebrowser-data/config.yaml.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"] 
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
     volumes:
       - ${FILES_PATH}:/folder
       - ./filebrowser-data:/home/filebrowser/data
