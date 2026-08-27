@@ -17,12 +17,13 @@ services:
     restart: unless-stopped
 
   landing:
-    image: nginx:alpine
+    build: ./landing
     network_mode: service:tailscale
     depends_on:
       - tailscale
-    volumes:
-      - ./landing:/usr/share/nginx/html:ro
+      - navidrome
+      - filebrowser
+      - jellyfin
     restart: unless-stopped
 
   navidrome:
