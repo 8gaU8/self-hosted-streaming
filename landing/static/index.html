@@ -133,10 +133,10 @@
 
     <script>
       const services = [
-        ["Navidrome", 4533],
-        ["File Browser", 8080],
-        ["Jellyfin", 8096],
-        ["Glances", 61208],
+        ["Navidrome", 4533, "/_health/navidrome"],
+        ["File Browser", 8080, "/_health/filebrowser"],
+        ["Jellyfin", 8096, "/_health/jellyfin"],
+        ["Glances", 61208, "/_health/glances"],
       ];
 
       const host = location.hostname;
@@ -144,7 +144,7 @@
 
       container.innerHTML = services
         .map(
-          ([name, port]) => `
+          ([name, port, check_path]) => `
             <a
               class="service"
               href="http://${host}:${port}"
@@ -162,6 +162,7 @@
               <div
                 class="status checking"
                 data-indicator="${port}"
+                data-check-path="${check_path}"
               >
                 <span class="status-dot"></span>
                 <span class="status-text">Checking</span>
@@ -176,6 +177,8 @@
 
         const indicator = document.querySelector(`[data-indicator="${port}"]`);
 
+        const checkPath = indicator.dataset.checkPath || "/";
+
         const indicatorText = indicator.querySelector(".status-text");
 
         const start = performance.now();
@@ -184,8 +187,8 @@
         const timeout = setTimeout(() => controller.abort(), 3000);
 
         try {
-          await fetch(`http://${host}:${port}/`, {
-            mode: "no-cors",
+          const response = await fetch(`http://${host}/${checkPath}`, {
+            // mode: "no-cors",
             cache: "no-store",
             signal: controller.signal,
           });
@@ -195,7 +198,8 @@
           indicator.className = "status online";
           indicatorText.textContent = "Online";
           status.textContent = `${elapsed} ms`;
-        } catch {
+        } catch (e) {
+          console.error(`Failed to fetch http://${host}:${port}/${checkPath}`, e);
           indicator.className = "status offline";
           indicatorText.textContent = "Offline";
           status.textContent = "Connection failed";
