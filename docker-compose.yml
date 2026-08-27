@@ -32,9 +32,17 @@ services:
     depends_on:
       - tailscale
     user: 501:20 # should be owner of volumes
+    environment:
+      ND_AGENTS: "apple-music,deezer,lastfm,listenbrainz"
+      ND_SCANNER_SCHEDULE: "@every 24h"
+      ND_BASEURL: "/navidrome"
+      ND_PLUGINS_ENABLED: "true"
+      ND_PLUGINS_AUTORELOAD: "true"
+      ND_PLUGINS_LOGLEVEL: "debug"
+      ND_PLUGINS_CACHESIZE: "200MB"
     volumes:
       - ${NAVIDROME_DATA_PATH}:/data
-      - ${MUSIC_PATH}:/music:ro
+      - ${NAVIDROME_MUSIC_PATH}:/music:ro
     restart: unless-stopped
 
   filebrowser:
