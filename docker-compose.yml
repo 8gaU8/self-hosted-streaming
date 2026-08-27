@@ -70,7 +70,8 @@ services:
       retries: 3
     volumes:
       - ${MEDIA_PATH}:/media
-      - ./filebrowser-data:/home/filebrowser/data
+      - ${FILEBROWSER_DATA_PATH}:/home/filebrowser/data
+      - ./filebrowser-data/config.yaml:/home/filebrowser/data/config.yaml:ro
     restart: unless-stopped
     <<: *default-logging 
 
