@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <title>Media Server</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         font-family: -apple-system, sans-serif;
         background: #1a1a1a;
@@ -12,39 +16,203 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100vh;
+        min-height: 100vh;
         margin: 0;
-        gap: 16px;
+        padding: 24px;
       }
-      a {
-        display: block;
-        padding: 16px 32px;
+
+      h1 {
+        margin: 0 0 24px;
+        font-size: 28px;
+      }
+
+      .services {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: min(100%, 360px);
+      }
+
+      .service {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
         background: #333;
+        border-radius: 8px;
         color: #fff;
         text-decoration: none;
-        border-radius: 8px;
-        font-size: 20px;
-        width: 240px;
-        text-align: center;
+        transition: background 0.15s ease;
       }
-      a:hover {
+
+      .service:hover {
         background: #444;
+      }
+
+      .service-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .service-name {
+        font-size: 18px;
+      }
+
+      .service-status {
+        margin-top: 4px;
+        font-size: 13px;
+        color: #aaa;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #777;
+        flex-shrink: 0;
+      }
+
+      .status.online .status-dot {
+        background: #4caf50;
+      }
+
+      .status.offline .status-dot {
+        background: #f44336;
+      }
+
+      .status.checking .status-dot {
+        background: #aaa;
+        animation: pulse 1s infinite;
+      }
+
+      .status.online {
+        color: #8bcf8b;
+      }
+
+      .status.offline {
+        color: #ef8b8b;
+      }
+
+      .status.checking {
+        color: #aaa;
+      }
+
+      .last-updated {
+        margin-top: 20px;
+        color: #777;
+        font-size: 12px;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+
+        50% {
+          opacity: 0.3;
+        }
       }
     </style>
   </head>
+
   <body>
     <h1>Media Server</h1>
-    <a id="navidrome-link">Navidrome</a>
-    <a id="filebrowser-link">File Browser</a>
-    <a id="jellyfin-link">Jellyfin</a>
-    <a id="glances-link">Glances</a>
+
+    <div class="services" id="services"></div>
+
+    <div class="last-updated" id="last-updated">Updating...</div>
 
     <script>
-      const host = window.location.hostname;
-      document.getElementById("navidrome-link").href = `http://${host}:4533`;
-      document.getElementById("filebrowser-link").href = `http://${host}:8080`;
-      document.getElementById('jellyfin-link').href = `http://${host}:8096`;
-      document.getElementById("glances-link").href = `http://${host}:61208`;
+      const services = [
+        ["Navidrome", 4533],
+        ["File Browser", 8080],
+        ["Jellyfin", 8096],
+        ["Glances", 61208],
+      ];
+
+      const host = location.hostname;
+      const container = document.querySelector("#services");
+
+      container.innerHTML = services
+        .map(
+          ([name, port]) => `
+            <a
+              class="service"
+              href="http://${host}:${port}"
+            >
+              <div class="service-info">
+                <div class="service-name">${name}</div>
+                <div
+                  class="service-status"
+                  data-status="${port}"
+                >
+                  Checking...
+                </div>
+              </div>
+
+              <div
+                class="status checking"
+                data-indicator="${port}"
+              >
+                <span class="status-dot"></span>
+                <span class="status-text">Checking</span>
+              </div>
+            </a>
+          `,
+        )
+        .join("");
+
+      async function checkService(port) {
+        const status = document.querySelector(`[data-status="${port}"]`);
+
+        const indicator = document.querySelector(`[data-indicator="${port}"]`);
+
+        const indicatorText = indicator.querySelector(".status-text");
+
+        const start = performance.now();
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+
+        try {
+          await fetch(`http://${host}:${port}/`, {
+            mode: "no-cors",
+            cache: "no-store",
+            signal: controller.signal,
+          });
+
+          const elapsed = Math.round(performance.now() - start);
+
+          indicator.className = "status online";
+          indicatorText.textContent = "Online";
+          status.textContent = `${elapsed} ms`;
+        } catch {
+          indicator.className = "status offline";
+          indicatorText.textContent = "Offline";
+          status.textContent = "Connection failed";
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+
+      async function updateStatuses() {
+        await Promise.all(services.map(([, port]) => checkService(port)));
+
+        document.querySelector("#last-updated").textContent =
+          `Last updated: ${new Date().toLocaleTimeString()}`;
+      }
+
+      updateStatuses();
+      setInterval(updateStatuses, 10_000);
     </script>
   </body>
 </html>
