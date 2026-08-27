@@ -85,7 +85,7 @@ services:
       - ${FILES_PATH}/jellyfin/config:/config
       - ${FILES_PATH}/jellyfin/cache:/cache
       - type: bind
-        source: ${FILES_PATH}
+        source: ${MEDIA_PATH}
         target: /media
     restart: 'unless-stopped'
 
