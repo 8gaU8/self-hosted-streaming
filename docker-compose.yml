@@ -30,6 +30,9 @@ services:
     network_mode: service:tailscale
     depends_on:
       - tailscale
+      - navidrome
+      - filebrowser
+      - glances
     volumes:
       - ./landing/static/index.html:/usr/share/nginx/html/index.html:ro
       - ./landing/conf/nginx.conf:/etc/nginx/conf.d/default.conf
