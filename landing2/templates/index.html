@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>mac-mini-media</title>
+  <style>
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #1a1a1a;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      gap: 12px;
+    }
+    .card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: #333;
+      border-radius: 8px;
+      width: 260px;
+      text-decoration: none;
+      color: #fff;
+    }
+    .card:hover { background: #444; }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #666;
+      flex-shrink: 0;
+    }
+    .status-dot.up { background: #4caf50; }
+    .status-dot.down { background: #f44336; }
+    .name { font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h1>mac-mini-media</h1>
+  {% for svc in services %}
+  <a class="card" id="card-{{ svc.port }}" href="#" data-port="{{ svc.port }}">
+    <span class="name">{{ svc.name }}</span>
+    <span class="status-dot" id="dot-{{ svc.port }}"></span>
+  </a>
+  {% endfor %}
+
+  <script>
+    const host = window.location.hostname;
+
+    document.querySelectorAll('.card').forEach(card => {
+      const port = card.dataset.port;
+      card.href = `http://${host}:${port}`;
+    });
+
+    async function refreshStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        data.forEach(svc => {
+          const dot = document.getElementById(`dot-${svc.port}`);
+          if (dot) {
+            dot.classList.toggle('up', svc.up);
+            dot.classList.toggle('down', !svc.up);
+          }
+        });
+      } catch (e) {
+        console.error('status fetch failed', e);
+      }
+    }
+
+    refreshStatus();
+    setInterval(refreshStatus, 10000);
+  </script>
+</body>
+</html>
