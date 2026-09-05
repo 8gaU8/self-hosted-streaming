@@ -12,6 +12,6 @@ RUN uv sync --frozen --no-dev
 COPY app.py .
 COPY templates/ templates/
 
-EXPOSE 8888
+EXPOSE 80 
 
-CMD ["uv", "run", "python", "app.py"]
+CMD [".venv/bin/python", "app.py"]

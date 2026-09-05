@@ -1,0 +1,12 @@
+services:
+  landing:
+    build: .
+    command: ["uv", "run", "flask", "--app", "app", "run", "--host=0.0.0.0", "--port=80", "--debug"]
+    environment:
+      - FLASK_DEBUG=1
+    volumes:
+      - ./app.py:/app/app.py
+      - ./templates:/app/templates
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "8888:80"

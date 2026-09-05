@@ -1,2 +1,0 @@
-Work in progress.
-DO NOT EDIT ANYTHING IN THIS DIRECTORY

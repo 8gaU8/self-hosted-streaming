@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mac-mini-media</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #1a1a1a;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px 16px 40px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 24px;
+    }
+
+    .icon-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 22px;
+      width: min(100%, 940px);
+      background: #1a1a1a;
+      padding: 14px 0;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+
+    .icon-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 68px;
+      color: #ddd;
+      text-decoration: none;
+    }
+
+    .icon-link img {
+      width: 56px;
+      height: 56px;
+      padding: 8px;
+      border-radius: 13px;
+      object-fit: contain;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+      transition: transform 0.1s ease;
+    }
+
+    .icon-link:hover img {
+      transform: translateY(-2px);
+    }
+
+    .icon-link:active img {
+      transform: scale(0.94);
+    }
+
+    .icon-link span {
+      font-size: 11px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    select, button {
+      font: inherit;
+      background: #333;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 6px;
+      padding: 6px 10px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:hover, select:hover {
+      background: #444;
+    }
+
+    .last-updated {
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .services {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      width: min(100%, 940px);
+    }
+
+    .card {
+      display: block;
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 16px 18px;
+      color: inherit;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    a.card-link {
+      cursor: pointer;
+    }
+
+    a.card-link:hover {
+      background: #313131;
+      border-color: #3a5a7a;
+    }
+
+    .card-total {
+      grid-column: 1 / -1;
+      background: #263041;
+      border: 1px solid #3a5a7a;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card-name {
+      font-size: 17px;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: #9ab3cc;
+      font-weight: normal;
+    }
+
+    .card-title {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #666;
+      flex-shrink: 0;
+    }
+
+    .status-dot.up { background: #4caf50; }
+    .status-dot.down { background: #f44336; }
+
+    .card-chevron {
+      color: #666;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    a.card-link:hover .card-chevron {
+      color: #8bb8ef;
+    }
+
+    .metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .donuts {
+      display: flex;
+      gap: 8px;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .metric svg {
+      width: 60px;
+      height: 60px;
+    }
+
+    .metric-ring-bg {
+      fill: none;
+      stroke: #444;
+      stroke-width: 8;
+    }
+
+    .metric-ring {
+      fill: none;
+      stroke-width: 8;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+      transition: stroke-dasharray 0.3s ease;
+    }
+
+    .metric-ring.cpu { stroke: #4caf50; }
+    .metric-ring.mem { stroke: #f0a840; }
+
+    .metric-label {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .metric-value {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .metric-detail {
+      font-size: 10px;
+      color: #888;
+      line-height: 1.4;
+    }
+
+    /* Disk I/O: two labeled horizontal bars, easier to read at a glance
+       than a pie since read/write is a magnitude comparison, not a ratio. */
+    .disk-io {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .disk-io-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .disk-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .disk-tag {
+      font-size: 10px;
+      width: 14px;
+      flex-shrink: 0;
+      color: #999;
+    }
+
+    .disk-track {
+      flex: 1;
+      height: 7px;
+      background: #3a3a3a;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .disk-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .disk-fill.read { background: #4a9eef; }
+    .disk-fill.write { background: #ef7d4a; }
+
+    .disk-amount {
+      font-size: 11px;
+      color: #ccc;
+      width: 62px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .unavailable {
+      color: #777;
+      font-size: 13px;
+      padding: 12px 0;
+    }
+
+    @media (max-width: 420px) {
+      .metric svg { width: 50px; height: 50px; }
+      .disk-amount { width: 54px; font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>mac-mini-media</h1>
+
+  <nav class="icon-bar">
+    {% for svc in services %}
+    {% if svc.link %}
+    <a class="icon-link" href="{{ svc.link }}">
+      <img src="/api/icon/{{ svc.key }}" alt="" onerror="this.style.display='none'">
+      <span>{{ svc.name }}</span>
+    </a>
+    {% endif %}
+    {% endfor %}
+  </nav>
+
+  <div class="controls">
+    <label for="interval">更新間隔:</label>
+    <select id="interval">
+      <option value="0">手動更新のみ(自動更新なし)</option>
+      <option value="5000">5秒ごと</option>
+      <option value="10000">10秒ごと</option>
+      <option value="30000">30秒ごと</option>
+      <option value="60000">60秒ごと</option>
+      <option value="300000">5分ごと</option>
+    </select>
+    <button id="refresh-now" type="button">今すぐ更新</button>
+  </div>
+
+  <div class="last-updated" id="last-updated">読み込み中...</div>
+
+  <div class="services">
+    <div class="card card-total" id="card-total">
+      <div class="card-header">
+        <span class="card-title">
+          <span class="card-name">全体 (docker-compose)</span>
+          <span class="card-sub" id="total-sub"></span>
+        </span>
+      </div>
+      <div class="metrics" id="metrics-total">
+        <div class="unavailable">読み込み中...</div>
+      </div>
+    </div>
+
+    {% for svc in services %}
+    {% if svc.link %}
+    <a class="card card-link" href="{{ svc.link }}" id="card-{{ svc.key }}">
+    {% else %}
+    <div class="card" id="card-{{ svc.key }}">
+    {% endif %}
+      <div class="card-header">
+        <span class="card-title">
+          <span class="card-name">{{ svc.name }}</span>
+        </span>
+        {% if svc.link %}
+        <span class="status-dot" id="dot-{{ svc.key }}"></span>
+        <span class="card-chevron">&rsaquo;</span>
+        {% endif %}
+      </div>
+      <div class="metrics" id="metrics-{{ svc.key }}">
+        <div class="unavailable">読み込み中...</div>
+      </div>
+    {% if svc.link %}
+    </a>
+    {% else %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <script>
+    const INTERVAL_KEY = "landing-refresh-interval";
+    const intervalSelect = document.querySelector("#interval");
+    const lastUpdatedEl = document.querySelector("#last-updated");
+
+    intervalSelect.value = localStorage.getItem(INTERVAL_KEY) || "0";
+
+    function formatBytes(bytes) {
+      if (!bytes) return "0 B";
+      const units = ["B", "KB", "MB", "GB", "TB"];
+      const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+      return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+    }
+
+    // A ring donut as an inline SVG: a background circle plus a foreground
+    // arc drawn via stroke-dasharray on the circle's circumference.
+    function ringSvg(percent, className, label, valueText, detailText) {
+      const r = 24;
+      const circumference = 2 * Math.PI * r;
+      const clamped = Math.max(0, Math.min(percent, 100));
+      const len = (clamped / 100) * circumference;
+      const dash = `${len} ${circumference - len}`;
+
+      return `
+        <div class="metric">
+          <svg viewBox="0 0 60 60">
+            <circle class="metric-ring-bg" cx="30" cy="30" r="${r}"></circle>
+            <circle class="metric-ring ${className}" cx="30" cy="30" r="${r}" stroke-dasharray="${dash}"></circle>
+          </svg>
+          <div class="metric-value">${valueText}</div>
+          <div class="metric-label">${label}</div>
+          ${detailText ? `<div class="metric-detail">${detailText}</div>` : ""}
+        </div>
+      `;
+    }
+
+    // Two horizontal bars (read / write) scaled against the largest disk
+    // figure on the page, so relative I/O across cards is visible at a
+    // glance -- a read/write split isn't naturally a part-of-whole ratio,
+    // which is what made the earlier pie chart hard to read.
+    function diskBars(read, write, maxBytes) {
+      const widthFor = (v) => {
+        if (!maxBytes || v <= 0) return 0;
+        return Math.max((v / maxBytes) * 100, 3);
+      };
+
+      return `
+        <div class="disk-io">
+          <div class="disk-io-header">
+            <span class="metric-label">ディスク I/O</span>
+            <span class="metric-value">${formatBytes(read + write)}</span>
+          </div>
+          <div class="disk-row">
+            <span class="disk-tag">読</span>
+            <div class="disk-track"><div class="disk-fill read" style="width:${widthFor(read)}%"></div></div>
+            <span class="disk-amount">${formatBytes(read)}</span>
+          </div>
+          <div class="disk-row">
+            <span class="disk-tag">書</span>
+            <div class="disk-track"><div class="disk-fill write" style="width:${widthFor(write)}%"></div></div>
+            <span class="disk-amount">${formatBytes(write)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderUsage(svc, maxDiskBytes) {
+      const container = document.querySelector(`#metrics-${svc.key}`);
+      if (!container) return;
+
+      if (!svc.available) {
+        container.innerHTML = `<div class="unavailable">利用不可</div>`;
+        return;
+      }
+
+      const cpuRing = ringSvg(svc.cpu_percent, "cpu", "CPU", `${svc.cpu_percent}%`);
+      const memRing =
+        svc.mem_percent === null
+          ? ringSvg(0, "mem", "メモリ", "—", formatBytes(svc.mem_used))
+          : ringSvg(svc.mem_percent, "mem", "メモリ", `${svc.mem_percent}%`, formatBytes(svc.mem_used));
+
+      container.innerHTML = `
+        <div class="donuts">${cpuRing}${memRing}</div>
+        ${diskBars(svc.disk_read, svc.disk_write, maxDiskBytes)}
+      `;
+    }
+
+    async function refreshStatus() {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        data.forEach((svc) => {
+          const dot = document.querySelector(`#dot-${svc.key}`);
+          if (dot) {
+            dot.classList.toggle("up", svc.up);
+            dot.classList.toggle("down", !svc.up);
+          }
+        });
+      } catch (e) {
+        console.error("status fetch failed", e);
+      }
+    }
+
+    async function refreshUsage() {
+      try {
+        const res = await fetch("/api/usage");
+        const data = await res.json();
+
+        const diskValues = [data.total.disk_read, data.total.disk_write];
+        data.services.forEach((svc) => {
+          if (svc.available) diskValues.push(svc.disk_read, svc.disk_write);
+        });
+        const maxDiskBytes = Math.max(1, ...diskValues);
+
+        const totalSub = document.querySelector("#total-sub");
+        if (totalSub) {
+          totalSub.textContent = `${data.total.container_count} コンテナ`;
+        }
+        renderUsage({ key: "total", available: true, ...data.total }, maxDiskBytes);
+        data.services.forEach((svc) => renderUsage(svc, maxDiskBytes));
+
+        lastUpdatedEl.textContent = `最終更新: ${new Date(data.updated_at).toLocaleTimeString()}`;
+      } catch (e) {
+        console.error("usage fetch failed", e);
+        lastUpdatedEl.textContent = "更新に失敗しました";
+      }
+    }
+
+    function refreshAll() {
+      refreshStatus();
+      refreshUsage();
+    }
+
+    let timer = null;
+    function scheduleRefresh() {
+      if (timer) clearInterval(timer);
+      const ms = Number(intervalSelect.value);
+      timer = ms > 0 ? setInterval(refreshAll, ms) : null;
+    }
+
+    intervalSelect.addEventListener("change", () => {
+      localStorage.setItem(INTERVAL_KEY, intervalSelect.value);
+      scheduleRefresh();
+    });
+
+    document.querySelector("#refresh-now").addEventListener("click", refreshAll);
+
+    refreshAll();
+    scheduleRefresh();
+  </script>
+</body>
+</html>
