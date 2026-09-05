@@ -6,7 +6,16 @@ from urllib.parse import urljoin
 
 import docker
 import requests
-from flask import Flask, Response, abort, jsonify, redirect, render_template, request, stream_with_context
+from flask import (
+    Flask,
+    Response,
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    stream_with_context,
+)
 
 app = Flask(__name__)
 

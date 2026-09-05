@@ -1,7 +1,8 @@
-# landing2
+# landing
 
-Flask-based landing/dashboard page for the media server. This is the sole
-entry point on port 80 (the old nginx `landing` service has been retired).
+Flask-based landing/dashboard page for the media server, served by gunicorn.
+This is the sole entry point on port 80 (the old nginx-based `landing`
+service has been retired).
 
 - `/` — dashboard: icon links to Jellyfin/Navidrome/File Browser, live
   status dots, and per-container + stack-wide CPU/memory/disk I/O usage.
@@ -20,6 +21,9 @@ disabled in `docker-compose.yml` for now.
 ```bash
 docker compose -f docker-compose.dev.yml up --build
 ```
+
+Runs Flask's own dev server with hot reload. Production (`Dockerfile`) runs
+gunicorn (`gunicorn --workers 2 --threads 4 --timeout 300 app:app`) instead.
 
 Serves on http://localhost:8888 (mapped to the container's port 80).
 Requires access to a Docker socket with the target containers running
