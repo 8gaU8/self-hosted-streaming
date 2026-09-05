@@ -315,14 +315,14 @@
   <h1>mac-mini-media</h1>
 
   <nav class="icon-bar">
-    {% for svc in services %}
-    {% if svc.link %}
-    <a class="icon-link" href="{{ svc.link }}">
-      <img src="/api/icon/{{ svc.key }}" alt="" onerror="this.style.display='none'">
-      <span>{{ svc.name }}</span>
+    {{range .Services}}
+    {{if .Link}}
+    <a class="icon-link" href="{{.Link}}">
+      <img src="/api/icon/{{.Key}}" alt="" onerror="this.style.display='none'">
+      <span>{{.Name}}</span>
     </a>
-    {% endif %}
-    {% endfor %}
+    {{end}}
+    {{end}}
   </nav>
 
   <div class="controls">
@@ -353,30 +353,30 @@
       </div>
     </div>
 
-    {% for svc in services %}
-    {% if svc.link %}
-    <a class="card card-link" href="{{ svc.link }}" id="card-{{ svc.key }}">
-    {% else %}
-    <div class="card" id="card-{{ svc.key }}">
-    {% endif %}
+    {{range .Services}}
+    {{if .Link}}
+    <a class="card card-link" href="{{.Link}}" id="card-{{.Key}}">
+    {{else}}
+    <div class="card" id="card-{{.Key}}">
+    {{end}}
       <div class="card-header">
         <span class="card-title">
-          <span class="card-name">{{ svc.name }}</span>
+          <span class="card-name">{{.Name}}</span>
         </span>
-        {% if svc.link %}
-        <span class="status-dot" id="dot-{{ svc.key }}"></span>
+        {{if .Link}}
+        <span class="status-dot" id="dot-{{.Key}}"></span>
         <span class="card-chevron">&rsaquo;</span>
-        {% endif %}
+        {{end}}
       </div>
-      <div class="metrics" id="metrics-{{ svc.key }}">
+      <div class="metrics" id="metrics-{{.Key}}">
         <div class="unavailable">読み込み中...</div>
       </div>
-    {% if svc.link %}
+    {{if .Link}}
     </a>
-    {% else %}
+    {{else}}
     </div>
-    {% endif %}
-    {% endfor %}
+    {{end}}
+    {{end}}
   </div>
 
   <script>
