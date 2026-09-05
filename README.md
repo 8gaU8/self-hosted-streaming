@@ -44,7 +44,7 @@ later needs no reverse proxy or manual certificate handling:
 1. In the Tailscale admin console, enable **HTTPS Certificates** for this
    tailnet (DNS settings) and make sure **MagicDNS** is on, so `landing`
    gets a valid `<hostname>.<tailnet>.ts.net` name.
-2. In [`landing/main.go`](landing/main.go), change the dashboard listener
+2. In [`landing/cmd/landing/main.go`](landing/cmd/landing/main.go), change the dashboard listener
    from `srv.Listen("tcp", ":80")` to `srv.ListenTLS("tcp", ":443")` (or
    `srv.ListenFunnel(...)` if it should also be reachable from the public
    internet, not just the tailnet).

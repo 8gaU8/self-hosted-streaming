@@ -18,12 +18,24 @@ device needed) and is the sole entry point on the tailnet.
   Jellyfin (8096)'s own ports on the tailnet, for native apps that connect
   straight to a service instead of going through the `/<key>/` proxy.
 
+## Layout
+
+Standard Go server-project layout ([go.dev/doc/modules/layout](https://go.dev/doc/modules/layout#server-project)):
+
+- `cmd/landing/main.go` -- entrypoint: env vars in, either a plain listener
+  or a `tsnet.Server` out. No application logic.
+- `internal/app/` -- everything else (routing, the reverse proxy, Docker
+  stats, the dashboard template). Not importable outside this module, and
+  its own exported surface is deliberately small (`NewMux`,
+  `NewDockerCollector`, `ListenDirectPorts`) since `cmd/landing` is the only
+  caller.
+
 ## Local development
 
-Without Docker, joining a tailnet at all:
+Without Docker, not joining a tailnet at all:
 
 ```bash
-go run .
+go run ./cmd/landing
 ```
 
 `TS_AUTHKEY` unset means `landing` skips `tsnet` entirely and just listens

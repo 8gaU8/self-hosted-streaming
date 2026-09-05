@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 go build -o /landing .
+RUN CGO_ENABLED=0 go build -o /landing ./cmd/landing
 
 FROM alpine:3.21
 

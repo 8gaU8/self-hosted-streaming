@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -131,7 +131,7 @@ func round1(v float64) float64 {
 	return float64(int64(v*10+0.5)) / 10
 }
 
-// dockerCollector talks to the Docker Engine API directly over its unix
+// DockerCollector talks to the Docker Engine API directly over its unix
 // socket to discover the compose project's containers and fetch their
 // stats. This deliberately avoids the official docker/docker Go module: at
 // the time of writing it's mid-split into github.com/moby/moby, and the
@@ -139,11 +139,12 @@ func round1(v float64) float64 {
 // The three calls this needs (list, filter by label, one-shot stats) are a
 // thin, stable slice of the API, so talking to it with plain net/http
 // avoids that churn and a large transitive dependency tree.
-type dockerCollector struct {
+type DockerCollector struct {
 	http *http.Client
 }
 
-func newDockerCollector() (*dockerCollector, error) {
+// NewDockerCollector connects to the Docker Engine's unix socket.
+func NewDockerCollector() (*DockerCollector, error) {
 	sock := os.Getenv("DOCKER_SOCKET")
 	if sock == "" {
 		sock = "/var/run/docker.sock"
@@ -155,10 +156,10 @@ func newDockerCollector() (*dockerCollector, error) {
 			return d.DialContext(ctx, "unix", sock)
 		},
 	}
-	return &dockerCollector{http: &http.Client{Transport: transport, Timeout: 10 * time.Second}}, nil
+	return &DockerCollector{http: &http.Client{Transport: transport, Timeout: 10 * time.Second}}, nil
 }
 
-func (d *dockerCollector) get(ctx context.Context, path string, out any) error {
+func (d *DockerCollector) get(ctx context.Context, path string, out any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://docker"+path, nil)
 	if err != nil {
 		return err
@@ -182,7 +183,7 @@ type containerSummary struct {
 	Labels map[string]string `json:"Labels"`
 }
 
-func (d *dockerCollector) listByLabel(ctx context.Context, label string) []containerSummary {
+func (d *DockerCollector) listByLabel(ctx context.Context, label string) []containerSummary {
 	filterJSON, _ := json.Marshal(map[string][]string{"label": {label}})
 
 	var out []containerSummary
@@ -196,8 +197,8 @@ func (d *dockerCollector) listByLabel(ctx context.Context, label string) []conta
 // docker-compose project, discovered via any known monitored service's
 // compose project label -- same approach as the Flask version's
 // list_project_containers().
-func (d *dockerCollector) listProjectContainers(ctx context.Context) []containerSummary {
-	for _, svc := range MonitoredServices {
+func (d *DockerCollector) listProjectContainers(ctx context.Context) []containerSummary {
+	for _, svc := range monitoredServices {
 		list := d.listByLabel(ctx, fmt.Sprintf("com.docker.compose.service=%s", svc.Key))
 		if len(list) == 0 {
 			continue
@@ -222,7 +223,7 @@ type containerUsage struct {
 // deltas); fetching sequentially would make this endpoint take
 // N * ~1.5s, so goroutines bound it to ~1.5s regardless of container count
 // (mirrors the Flask version's ThreadPoolExecutor).
-func (d *dockerCollector) fetchAllStats(ctx context.Context, containers []containerSummary) []containerUsage {
+func (d *DockerCollector) fetchAllStats(ctx context.Context, containers []containerSummary) []containerUsage {
 	results := make([]containerUsage, len(containers))
 	var wg sync.WaitGroup
 
@@ -296,7 +297,7 @@ type usageResponse struct {
 	Total     totalUsage     `json:"total"`
 }
 
-func (d *dockerCollector) usage(ctx context.Context) usageResponse {
+func (d *DockerCollector) usage(ctx context.Context) usageResponse {
 	containers := d.listProjectContainers(ctx)
 	results := d.fetchAllStats(ctx, containers)
 
@@ -326,8 +327,8 @@ func (d *dockerCollector) usage(ctx context.Context) usageResponse {
 		total.MemPercent = &p
 	}
 
-	services := make([]serviceUsage, 0, len(MonitoredServices))
-	for _, svc := range MonitoredServices {
+	services := make([]serviceUsage, 0, len(monitoredServices))
+	for _, svc := range monitoredServices {
 		u, ok := byService[svc.Key]
 		services = append(services, serviceUsage{Key: svc.Key, Name: svc.Name, Available: ok, usageResult: u})
 	}

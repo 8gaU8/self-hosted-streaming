@@ -1,4 +1,4 @@
-package main
+package app
 
 // Service describes one linked application: it has a web UI reverse-proxied
 // by landing at Link, and is reachable directly on the docker network at
@@ -19,7 +19,7 @@ type Service struct {
 
 // Services with a web UI, reverse-proxied by landing and monitored on the
 // dashboard.
-var LinkedServices = []Service{
+var linkedServices = []Service{
 	{
 		Key:       "jellyfin",
 		Name:      "Jellyfin",
@@ -52,11 +52,11 @@ var LinkedServices = []Service{
 // Containers whose resource usage is shown on the dashboard as its own
 // card. There is no longer a separate tailscale container to monitor here
 // (it's embedded into this process via tsnet), so this is just an alias of
-// LinkedServices.
-var MonitoredServices = LinkedServices
+// linkedServices.
+var monitoredServices = linkedServices
 
-// DirectPorts are the additional bare-TCP tailnet listeners that mirror
+// directPorts are the additional bare-TCP tailnet listeners that mirror
 // what ts-config/serve.json used to do: expose each service's own port
 // directly on the tailnet (bypassing the /<key>/ proxy) for native apps
 // that want a direct connection (e.g. Navidrome/Jellyfin mobile clients).
-var DirectPorts = LinkedServices
+var directPorts = linkedServices

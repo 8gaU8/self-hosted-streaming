@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"encoding/json"
@@ -35,9 +35,9 @@ func checkService(svc Service) bool {
 }
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {
-	results := make([]statusEntry, len(LinkedServices))
+	results := make([]statusEntry, len(linkedServices))
 	var wg sync.WaitGroup
-	for i, svc := range LinkedServices {
+	for i, svc := range linkedServices {
 		wg.Add(1)
 		go func(i int, svc Service) {
 			defer wg.Done()
@@ -49,7 +49,7 @@ func statusHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, results)
 }
 
-func usageHandler(w http.ResponseWriter, r *http.Request, collector *dockerCollector) {
+func usageHandler(w http.ResponseWriter, r *http.Request, collector *DockerCollector) {
 	writeJSON(w, collector.usage(r.Context()))
 }
 
@@ -114,7 +114,7 @@ func iconHandler(w http.ResponseWriter, r *http.Request) {
 
 	var svc Service
 	found := false
-	for _, s := range LinkedServices {
+	for _, s := range linkedServices {
 		if s.Key == key {
 			svc, found = s, true
 			break

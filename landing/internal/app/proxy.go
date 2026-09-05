@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"io"
@@ -8,6 +8,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
+
+	"tailscale.com/tsnet"
 )
 
 // newServiceProxy returns an http.Handler that reverse-proxies every
@@ -30,11 +32,26 @@ func newServiceProxy(svc Service) http.Handler {
 	return proxy
 }
 
+// ListenDirectPorts starts the direct-port passthrough on srv: for each
+// linked service it opens a tailnet listener on that service's own port
+// and relays raw TCP straight to it, bypassing the /<key>/ proxy -- what
+// ts-config/serve.json's TCP forwards used to do, for native apps that
+// connect straight to Navidrome/Jellyfin/File Browser's own port.
+func ListenDirectPorts(srv *tsnet.Server) error {
+	for _, svc := range directPorts {
+		addr := ":" + strconv.Itoa(svc.Port)
+		ln, err := srv.Listen("tcp", addr)
+		if err != nil {
+			return err
+		}
+		target := net.JoinHostPort(svc.Host, strconv.Itoa(svc.Port))
+		go tcpProxyLoop(ln, target)
+	}
+	return nil
+}
+
 // tcpProxyLoop accepts connections on ln and relays each one, byte for
-// byte, to target -- the direct-port passthrough that used to be a plain
-// TCP forward in ts-config/serve.json (Navidrome/Jellyfin/Filebrowser
-// native apps connecting straight to their own port instead of through the
-// /<key>/ proxy prefix).
+// byte, to target.
 func tcpProxyLoop(ln net.Listener, target string) {
 	for {
 		conn, err := ln.Accept()
