@@ -38,7 +38,7 @@ func newServiceProxy(svc Service) http.Handler {
 // ts-config/serve.json's TCP forwards used to do, for native apps that
 // connect straight to Navidrome/Jellyfin/File Browser's own port.
 func ListenDirectPorts(srv *tsnet.Server) error {
-	for _, svc := range directPorts {
+	for _, svc := range linkedServices {
 		addr := ":" + strconv.Itoa(svc.Port)
 		ln, err := srv.Listen("tcp", addr)
 		if err != nil {

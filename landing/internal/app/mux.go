@@ -37,7 +37,7 @@ func NewMux(collector *DockerCollector) *http.ServeMux {
 			http.NotFound(w, r)
 			return
 		}
-		data := struct{ Services []Service }{monitoredServices}
+		data := struct{ Services []Service }{linkedServices}
 		if err := indexTemplate.Execute(w, data); err != nil {
 			log.Printf("render index: %v", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)

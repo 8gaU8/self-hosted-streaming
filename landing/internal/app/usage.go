@@ -220,7 +220,7 @@ func (d *DockerCollector) listByLabel(ctx context.Context, label string) []conta
 // compose project label -- same approach as the Flask version's
 // list_project_containers().
 func (d *DockerCollector) listProjectContainers(ctx context.Context) []containerSummary {
-	for _, svc := range monitoredServices {
+	for _, svc := range linkedServices {
 		list := d.listByLabel(ctx, fmt.Sprintf("com.docker.compose.service=%s", svc.Key))
 		if len(list) == 0 {
 			continue
@@ -353,8 +353,8 @@ func (d *DockerCollector) usage(ctx context.Context) usageResponse {
 		total.MemPercent = &p
 	}
 
-	services := make([]serviceUsage, 0, len(monitoredServices))
-	for _, svc := range monitoredServices {
+	services := make([]serviceUsage, 0, len(linkedServices))
+	for _, svc := range linkedServices {
 		u, ok := byService[svc.Key]
 		services = append(services, serviceUsage{Key: svc.Key, Name: svc.Name, Available: ok, usageResult: u})
 	}
