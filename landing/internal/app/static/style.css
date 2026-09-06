@@ -240,34 +240,36 @@ a.card-link:hover .card-chevron {
   line-height: 1.4;
 }
 
-/* Disk I/O: two labeled horizontal bars, easier to read at a glance
-   than a pie since read/write is a magnitude comparison, not a ratio. */
-.disk-io {
+/* I/O blocks (disk read/write, network rx/tx): two labeled horizontal bars,
+   easier to read at a glance than a pie since a read/write or rx/tx split
+   is a magnitude comparison, not a ratio. Shared between disk and network
+   usage, which only differ in labels and fill color. */
+.io-block {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.disk-io-header {
+.io-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
 }
 
-.disk-row {
+.io-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.disk-tag {
+.io-tag {
   font-size: 10px;
   width: 14px;
   flex-shrink: 0;
   color: #999;
 }
 
-.disk-track {
+.io-track {
   flex: 1;
   height: 7px;
   background: #3a3a3a;
@@ -275,16 +277,18 @@ a.card-link:hover .card-chevron {
   overflow: hidden;
 }
 
-.disk-fill {
+.io-fill {
   height: 100%;
   border-radius: 4px;
   transition: width 0.3s ease;
 }
 
-.disk-fill.read { background: #4a9eef; }
-.disk-fill.write { background: #ef7d4a; }
+.io-fill.read { background: #4a9eef; }
+.io-fill.write { background: #ef7d4a; }
+.io-fill.rx { background: #4ac9a0; }
+.io-fill.tx { background: #c77def; }
 
-.disk-amount {
+.io-amount {
   font-size: 11px;
   color: #ccc;
   width: 62px;
@@ -300,5 +304,5 @@ a.card-link:hover .card-chevron {
 
 @media (max-width: 420px) {
   .metric svg { width: 50px; height: 50px; }
-  .disk-amount { width: 54px; font-size: 10px; }
+  .io-amount { width: 54px; font-size: 10px; }
 }

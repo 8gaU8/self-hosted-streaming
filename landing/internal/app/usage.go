@@ -45,6 +45,10 @@ type dockerStats struct {
 			Value uint64 `json:"value"`
 		} `json:"io_service_bytes_recursive"`
 	} `json:"blkio_stats"`
+	Networks map[string]struct {
+		RxBytes uint64 `json:"rx_bytes"`
+		TxBytes uint64 `json:"tx_bytes"`
+	} `json:"networks"`
 }
 
 type usageResult struct {
@@ -54,6 +58,8 @@ type usageResult struct {
 	MemPercent *float64 `json:"mem_percent"`
 	DiskRead   uint64   `json:"disk_read"`
 	DiskWrite  uint64   `json:"disk_write"`
+	NetRx      uint64   `json:"net_rx"`
+	NetTx      uint64   `json:"net_tx"`
 }
 
 func cpuPercent(s *dockerStats) float64 {
@@ -109,9 +115,23 @@ func blkioBytes(s *dockerStats) (read, write uint64) {
 	return read, write
 }
 
+// networkBytes sums traffic across every interface the container's network
+// namespace reports (normally just one). Each container now has its own
+// namespace, so unlike under the old network_mode: service:tailscale setup
+// -- where every container shared one namespace and would've all reported
+// the same host-wide numbers -- this is meaningful per-container traffic.
+func networkBytes(s *dockerStats) (rx, tx uint64) {
+	for _, n := range s.Networks {
+		rx += n.RxBytes
+		tx += n.TxBytes
+	}
+	return rx, tx
+}
+
 func usageFromStats(s *dockerStats) usageResult {
 	memUsed, memLimit := memoryUsage(s)
 	diskRead, diskWrite := blkioBytes(s)
+	netRx, netTx := networkBytes(s)
 
 	u := usageResult{
 		CPUPercent: cpuPercent(s),
@@ -119,6 +139,8 @@ func usageFromStats(s *dockerStats) usageResult {
 		MemLimit:   memLimit,
 		DiskRead:   diskRead,
 		DiskWrite:  diskWrite,
+		NetRx:      netRx,
+		NetTx:      netTx,
 	}
 	if memLimit > 0 {
 		p := round1(float64(memUsed) / float64(memLimit) * 100)
@@ -262,6 +284,8 @@ type totalUsage struct {
 	MemPercent     *float64 `json:"mem_percent"`
 	DiskRead       uint64   `json:"disk_read"`
 	DiskWrite      uint64   `json:"disk_write"`
+	NetRx          uint64   `json:"net_rx"`
+	NetTx          uint64   `json:"net_tx"`
 	ContainerCount int      `json:"container_count"`
 }
 
@@ -318,6 +342,8 @@ func (d *DockerCollector) usage(ctx context.Context) usageResponse {
 		}
 		total.DiskRead += u.DiskRead
 		total.DiskWrite += u.DiskWrite
+		total.NetRx += u.NetRx
+		total.NetTx += u.NetTx
 		total.ContainerCount++
 	}
 
