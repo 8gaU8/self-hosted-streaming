@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mac-mini-media</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>mac-mini-media</h1>
+
+  <nav class="icon-bar">
+    {{range .Services}}
+    {{if .Link}}
+    <a class="icon-link" href="{{.Link}}">
+      <img src="/api/icon/{{.Key}}" alt="" onerror="this.style.display='none'">
+      <span>{{.Name}}</span>
+    </a>
+    {{end}}
+    {{end}}
+  </nav>
+
+  <div class="controls">
+    <label for="interval">更新間隔:</label>
+    <select id="interval">
+      <option value="0">手動更新のみ(自動更新なし)</option>
+      <option value="5000">5秒ごと</option>
+      <option value="10000">10秒ごと</option>
+      <option value="30000">30秒ごと</option>
+      <option value="60000">60秒ごと</option>
+      <option value="300000">5分ごと</option>
+    </select>
+    <button id="refresh-now" type="button">今すぐ更新</button>
+  </div>
+
+  <div class="last-updated" id="last-updated">読み込み中...</div>
+
+  <div class="services">
+    <div class="card card-total" id="card-total">
+      <div class="card-header">
+        <span class="card-title">
+          <span class="card-name">全体 (docker-compose)</span>
+          <span class="card-sub" id="total-sub"></span>
+        </span>
+      </div>
+      <div class="metrics" id="metrics-total">
+        <div class="unavailable">読み込み中...</div>
+      </div>
+    </div>
+
+    {{range .Services}}
+    {{if .Link}}
+    <a class="card card-link" href="{{.Link}}" id="card-{{.Key}}">
+    {{else}}
+    <div class="card" id="card-{{.Key}}">
+    {{end}}
+      <div class="card-header">
+        <span class="card-title">
+          <span class="card-name">{{.Name}}</span>
+        </span>
+        {{if .Link}}
+        <span class="status-dot" id="dot-{{.Key}}"></span>
+        <span class="card-chevron">&rsaquo;</span>
+        {{end}}
+      </div>
+      <div class="metrics" id="metrics-{{.Key}}">
+        <div class="unavailable">読み込み中...</div>
+      </div>
+    {{if .Link}}
+    </a>
+    {{else}}
+    </div>
+    {{end}}
+    {{end}}
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
