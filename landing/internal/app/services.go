@@ -47,5 +47,13 @@ var linkedServices = []Service{
 		Link:      "/filebrowser/",
 		IconPage:  "/filebrowser/",
 	},
+	{
+		Key:       "immich",
+		Name:      "Immich",
+		Host:      "immich",
+		Port:      2283,
+		CheckPath: "/api/health",
+		Link:      "",
+		IconPage:  "/immich/",
+	},
 }
-

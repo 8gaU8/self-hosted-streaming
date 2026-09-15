@@ -1,3 +1,5 @@
+include:
+  - immich/docker-compose.yml
 
 # Use extended yaml syntax to define a logging configuration that can be reused across services.
 x-logging: &default-logging
@@ -27,6 +29,7 @@ services:
       - navidrome
       - filebrowser
       - jellyfin
+      - immich
     restart: unless-stopped
     <<: *default-logging
 
