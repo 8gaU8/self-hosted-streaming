@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 )
 
@@ -37,7 +38,14 @@ func NewMux(collector *DockerCollector) *http.ServeMux {
 			http.NotFound(w, r)
 			return
 		}
-		data := struct{ Services []Service }{linkedServices}
+		host := r.Host
+		if h, _, err := net.SplitHostPort(host); err == nil {
+			host = h
+		}
+		data := struct {
+			Services []Service
+			Hostname string
+		}{linkedServices, host}
 		if err := indexTemplate.Execute(w, data); err != nil {
 			log.Printf("render index: %v", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)

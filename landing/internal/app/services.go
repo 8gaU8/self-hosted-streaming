@@ -53,7 +53,6 @@ var linkedServices = []Service{
 		Host:      "immich",
 		Port:      2283,
 		CheckPath: "/api/health",
-		Link:      "",
 		IconPage:  "/immich/",
 	},
 }
