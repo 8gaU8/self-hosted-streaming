@@ -1,0 +1,15 @@
+[tasks.upgrade-services]
+alias = "ups"
+description = "Pull the latest image (or rebuild) and recreate one service"
+usage = '''
+arg "<service>" help="Service to upgrade" {
+  choices "navidrome" "filebrowser" "jellyfin" "landing" "immich"
+}
+'''
+run = '''
+case "${usage_service}" in
+  immich) services="immich immich-machine-learning immich-redis immich-database" ;;
+  *) services="${usage_service}" ;;
+esac
+docker compose up -d --no-deps --build --pull always $services
+'''
