@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -23,6 +24,17 @@ type statusEntry struct {
 
 func serviceURL(svc Service, path string) string {
 	return "http://" + net.JoinHostPort(svc.Host, strconv.Itoa(svc.Port)) + path
+}
+
+// hostnameOf returns the host the client used to reach this server, with
+// any port stripped -- e.g. the Tailscale hostname, a Tailscale IP, or
+// "localhost" in local dev, whichever the browser actually used.
+func hostnameOf(r *http.Request) string {
+	host := r.Host
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	return host
 }
 
 func checkService(svc Service) bool {
@@ -62,7 +74,11 @@ var (
 
 var iconClient = &http.Client{Timeout: 3 * time.Second}
 
-func resolveIconURL(svc Service) (string, bool) {
+// resolveIconPath scrapes svc's icon page for its real favicon path (e.g.
+// "/jellyfin/web/favicon.ico"), relative to the service's own root -- not a
+// full URL, since that depends on which host:port the caller reaches this
+// server on (see hostnameOf), which the cached result must not bake in.
+func resolveIconPath(svc Service) (string, bool) {
 	iconCacheMu.Lock()
 	if cached, ok := iconCache[svc.Key]; ok {
 		iconCacheMu.Unlock()
@@ -89,9 +105,7 @@ func resolveIconURL(svc Service) (string, bool) {
 		return "", false
 	}
 
-	// The href is relative to IconPage, which the proxy passes through
-	// 1:1 (no path rewriting), so resolving it against that path also
-	// gives the public URL.
+	// The href is relative to IconPage.
 	base, err := url.Parse(svc.IconPage)
 	if err != nil {
 		return "", false
@@ -100,13 +114,13 @@ func resolveIconURL(svc Service) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	iconURL := base.ResolveReference(ref).String()
+	iconPath := base.ResolveReference(ref).String()
 
 	iconCacheMu.Lock()
-	iconCache[svc.Key] = iconURL
+	iconCache[svc.Key] = iconPath
 	iconCacheMu.Unlock()
 
-	return iconURL, true
+	return iconPath, true
 }
 
 func iconHandler(w http.ResponseWriter, r *http.Request) {
@@ -125,12 +139,13 @@ func iconHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	iconURL, ok := resolveIconURL(svc)
+	iconPath, ok := resolveIconPath(svc)
 	if !ok {
 		http.NotFound(w, r)
 		return
 	}
 
+	iconURL := fmt.Sprintf("http://%s%s", net.JoinHostPort(hostnameOf(r), strconv.Itoa(svc.Port)), iconPath)
 	http.Redirect(w, r, iconURL, http.StatusFound)
 }
 

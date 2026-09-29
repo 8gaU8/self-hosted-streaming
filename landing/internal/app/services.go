@@ -1,24 +1,23 @@
 package app
 
-// Service describes one linked application: it has a web UI reverse-proxied
-// by landing at Link, and is reachable directly on the docker network at
-// Host:Port for server-side health checks and proxying.
+// Service describes one linked application: reachable directly on the
+// docker network at Host:Port for server-side health checks, and on the
+// tailnet at the same Port via ListenDirectPorts.
 //
-// IconPage is the same app fetched directly (bypassing the /<key>/ proxy
-// prefix) so /api/icon/<key> can scrape its real <link rel="icon"> instead
-// of hardcoding a filename that changes across releases.
+// IconPage is fetched directly at Host:Port so /api/icon/<key> can scrape
+// its real <link rel="icon"> instead of hardcoding a filename that changes
+// across releases.
 type Service struct {
 	Key       string
 	Name      string
 	Host      string
 	Port      int
 	CheckPath string
-	Link      string
 	IconPage  string
 }
 
-// Services with a web UI, reverse-proxied by landing and monitored on the
-// dashboard.
+// Services monitored on the dashboard, each reachable directly at
+// <hostname>:<Port> on the tailnet.
 var linkedServices = []Service{
 	{
 		Key:       "jellyfin",
@@ -26,7 +25,6 @@ var linkedServices = []Service{
 		Host:      "jellyfin",
 		Port:      8096,
 		CheckPath: "/health",
-		Link:      "/jellyfin/",
 		IconPage:  "/jellyfin/web/",
 	},
 	{
@@ -35,7 +33,6 @@ var linkedServices = []Service{
 		Host:      "navidrome",
 		Port:      4533,
 		CheckPath: "/ping",
-		Link:      "/navidrome/",
 		IconPage:  "/navidrome/app/",
 	},
 	{
@@ -44,7 +41,6 @@ var linkedServices = []Service{
 		Host:      "filebrowser",
 		Port:      8080,
 		CheckPath: "/health",
-		Link:      "/filebrowser/",
 		IconPage:  "/filebrowser/",
 	},
 	{
@@ -53,6 +49,6 @@ var linkedServices = []Service{
 		Host:      "immich",
 		Port:      2283,
 		CheckPath: "/api/health",
-		IconPage:  "/immich/",
+		IconPage:  "/",
 	},
 }

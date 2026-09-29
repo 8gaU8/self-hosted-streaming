@@ -7,4 +7,3 @@ server:
 
 http:
   port: 8080
-  baseURL: "/filebrowser"

@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
-	"net"
 	"net/http"
 )
 
@@ -27,9 +26,10 @@ func staticHandler() http.Handler {
 	return http.StripPrefix("/static/", http.FileServerFS(sub))
 }
 
-// NewMux builds the dashboard's HTTP routes: the "/" dashboard page, the
-// /api/* JSON endpoints, and a reverse proxy under /<key>/ for each linked
-// service.
+// NewMux builds the dashboard's HTTP routes: the "/" dashboard page and the
+// /api/* JSON endpoints. Each service itself is reached directly at
+// <hostname>:<Port> on the tailnet (see ListenDirectPorts), not proxied
+// through here.
 func NewMux(collector *DockerCollector) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -38,14 +38,10 @@ func NewMux(collector *DockerCollector) *http.ServeMux {
 			http.NotFound(w, r)
 			return
 		}
-		host := r.Host
-		if h, _, err := net.SplitHostPort(host); err == nil {
-			host = h
-		}
 		data := struct {
 			Services []Service
 			Hostname string
-		}{linkedServices, host}
+		}{linkedServices, hostnameOf(r)}
 		if err := indexTemplate.Execute(w, data); err != nil {
 			log.Printf("render index: %v", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)
@@ -58,10 +54,6 @@ func NewMux(collector *DockerCollector) *http.ServeMux {
 	mux.HandleFunc("/api/usage", func(w http.ResponseWriter, r *http.Request) {
 		usageHandler(w, r, collector)
 	})
-
-	for _, svc := range linkedServices {
-		mux.Handle("/"+svc.Key+"/", newServiceProxy(svc))
-	}
 
 	return mux
 }

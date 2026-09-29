@@ -11,8 +11,8 @@
 
   <nav class="icon-bar">
     {{range .Services}}
-    {{if .Link}}
-    <a class="icon-link" href="{{.Link}}">
+    {{if .Port}}
+    <a class="icon-link" href="http://{{$.Hostname}}:{{.Port}}">
       <img src="/api/icon/{{.Key}}" alt="" onerror="this.style.display='none'">
       <span>{{.Name}}</span>
     </a>
@@ -49,9 +49,7 @@
     </div>
 
     {{range .Services}}
-    {{if .Link}}
-    <a class="card card-link" href="{{.Link}}" id="card-{{.Key}}">
-    {{else if .Port}}
+    {{if .Port}}
     <a class="card card-link" href="http://{{$.Hostname}}:{{.Port}}" id="card-{{.Key}}">
     {{else}}
     <div class="card" id="card-{{.Key}}">
@@ -60,7 +58,7 @@
         <span class="card-title">
           <span class="card-name">{{.Name}}</span>
         </span>
-        {{if or .Link .Port}}
+        {{if .Port}}
         <span class="status-dot" id="dot-{{.Key}}"></span>
         <span class="card-chevron">&rsaquo;</span>
         {{end}}
@@ -68,7 +66,7 @@
       <div class="metrics" id="metrics-{{.Key}}">
         <div class="unavailable">読み込み中...</div>
       </div>
-    {{if or .Link .Port}}
+    {{if .Port}}
     </a>
     {{else}}
     </div>

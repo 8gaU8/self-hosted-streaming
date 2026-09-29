@@ -4,39 +4,17 @@ import (
 	"io"
 	"log"
 	"net"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"strconv"
+	"sync"
 
 	"tailscale.com/tsnet"
 )
 
-// newServiceProxy returns an http.Handler that reverse-proxies every
-// request under prefix (e.g. "/jellyfin") straight through to the target
-// service on the docker network, preserving the full request path -- the
-// same behavior as the old Flask reverse_proxy(), which forwarded
-// request.full_path unchanged. httputil.ReverseProxy handles streaming
-// (large filebrowser downloads, Jellyfin playback) and hop-by-hop header
-// stripping for us, so unlike the Flask version there's no manual header
-// filtering here.
-func newServiceProxy(svc Service) http.Handler {
-	target := &url.URL{Scheme: "http", Host: net.JoinHostPort(svc.Host, strconv.Itoa(svc.Port))}
-
-	proxy := httputil.NewSingleHostReverseProxy(target)
-	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-		log.Printf("proxy %s: %v", svc.Key, err)
-		w.WriteHeader(http.StatusBadGateway)
-	}
-
-	return proxy
-}
-
-// ListenDirectPorts starts the direct-port passthrough on srv: for each
-// linked service it opens a tailnet listener on that service's own port
-// and relays raw TCP straight to it, bypassing the /<key>/ proxy -- what
-// ts-config/serve.json's TCP forwards used to do, for native apps that
-// connect straight to Navidrome/Jellyfin/File Browser's own port.
+// ListenDirectPorts starts the tailnet listeners on srv: for each service
+// it opens a tailnet listener on that service's own port and relays raw TCP
+// straight to it on the docker network -- what ts-config/serve.json's TCP
+// forwards used to do, so every service is reachable at
+// <hostname>:<Port> on the tailnet.
 func ListenDirectPorts(srv *tsnet.Server) error {
 	for _, svc := range linkedServices {
 		addr := ":" + strconv.Itoa(svc.Port)
@@ -63,6 +41,23 @@ func tcpProxyLoop(ln net.Listener, target string) {
 	}
 }
 
+// halfCloser is implemented by *net.TCPConn and tsnet's netstack conns; it
+// lets us shut down one direction of a connection without killing the other,
+// which is still carrying data.
+type halfCloser interface {
+	CloseWrite() error
+}
+
+// copyHalf copies src to dst, then half-closes dst's write side (if
+// supported) so the still-running copy in the opposite direction isn't cut
+// off by the caller's deferred full Close.
+func copyHalf(dst, src net.Conn) {
+	io.Copy(dst, src)
+	if hc, ok := dst.(halfCloser); ok {
+		hc.CloseWrite()
+	}
+}
+
 func relayTCP(client net.Conn, target string) {
 	defer client.Close()
 
@@ -73,14 +68,19 @@ func relayTCP(client net.Conn, target string) {
 	}
 	defer upstream.Close()
 
-	done := make(chan struct{}, 2)
+	// Wait for both directions to finish -- an HTTP upload keeps sending
+	// the request body well after the response side has nothing more to
+	// read, so returning (and closing both conns) as soon as one direction
+	// finishes was cutting uploads off mid-transfer.
+	var wg sync.WaitGroup
+	wg.Add(2)
 	go func() {
-		io.Copy(upstream, client)
-		done <- struct{}{}
+		defer wg.Done()
+		copyHalf(upstream, client)
 	}()
 	go func() {
-		io.Copy(client, upstream)
-		done <- struct{}{}
+		defer wg.Done()
+		copyHalf(client, upstream)
 	}()
-	<-done
+	wg.Wait()
 }
