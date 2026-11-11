@@ -3,7 +3,7 @@ alias = "ups"
 description = "Pull the latest image (or rebuild) and recreate one service"
 usage = '''
 arg "<service>" help="Service to upgrade" {
-  choices "navidrome" "filebrowser" "jellyfin" "landing" "immich"
+  choices "navidrome" "jellyfin" "landing" "immich"
 }
 '''
 run = '''

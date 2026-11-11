@@ -1,6 +1,6 @@
 # Immich (self-hosted photo/video management), included from the root
 # docker-compose.yml via `include:`. Kept in its own file since none of
-# these 4 services are needed by navidrome/filebrowser/jellyfin/landing.
+# these 4 services are needed by navidrome/jellyfin/landing.
 x-logging: &default-logging
   logging:
     driver: "json-file"

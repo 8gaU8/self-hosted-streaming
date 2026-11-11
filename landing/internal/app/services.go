@@ -36,14 +36,6 @@ var linkedServices = []Service{
 		IconPage:  "/navidrome/app/",
 	},
 	{
-		Key:       "filebrowser",
-		Name:      "File Browser",
-		Host:      "filebrowser",
-		Port:      8080,
-		CheckPath: "/health",
-		IconPage:  "/filebrowser/",
-	},
-	{
 		Key:       "immich",
 		Name:      "Immich",
 		Host:      "immich",

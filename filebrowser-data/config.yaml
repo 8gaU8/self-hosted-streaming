@@ -1,9 +1,0 @@
-server:
-  cacheDir: /home/filebrowser/data/tmp # using the data volume so it can persist across restarts
-  sources:
-    - path: /media # Do not use a root "/" directory or include the "/var" folder
-      config:
-        defaultEnabled: true
-
-http:
-  port: 8080
