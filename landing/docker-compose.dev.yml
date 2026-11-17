@@ -1,7 +1,0 @@
-services:
-  landing:
-    build: .
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "8888:80"

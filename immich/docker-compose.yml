@@ -1,6 +1,6 @@
 # Immich (self-hosted photo/video management), included from the root
 # docker-compose.yml via `include:`. Kept in its own file since none of
-# these 4 services are needed by navidrome/jellyfin/landing.
+# these 4 services are needed by navidrome/jellyfin.
 x-logging: &default-logging
   logging:
     driver: "json-file"
@@ -21,9 +21,10 @@ services:
       DB_PASSWORD: ${IMMICH_DB_PASSWORD}
       DB_DATABASE_NAME: ${IMMICH_DB_DATABASE_NAME}
       REDIS_HOSTNAME: immich_redis
-    ports:
-      - '2283:2283'
+    # `tailscale` lives in the root docker-compose.yml.
+    network_mode: service:tailscale
     depends_on:
+      - tailscale
       - immich-redis
       - immich-database
     restart: unless-stopped

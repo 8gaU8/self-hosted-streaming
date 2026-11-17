@@ -1,15 +1,17 @@
 [tasks.upgrade-services]
 alias = "ups"
-description = "Pull the latest image (or rebuild) and recreate one service"
+description = "Pull the latest image and recreate one service"
 usage = '''
 arg "<service>" help="Service to upgrade" {
-  choices "navidrome" "jellyfin" "landing" "immich"
+  choices "navidrome" "jellyfin" "immich" "tailscale"
 }
 '''
 run = '''
 case "${usage_service}" in
   immich) services="immich immich-machine-learning immich-redis immich-database" ;;
+  # The apps share tailscale's network namespace, so they must be recreated with it.
+  tailscale) services="tailscale navidrome jellyfin immich" ;;
   *) services="${usage_service}" ;;
 esac
-docker compose up -d --no-deps --build --pull always $services
+docker compose up -d --no-deps --pull always $services
 '''

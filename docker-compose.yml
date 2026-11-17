@@ -10,29 +10,34 @@ x-logging: &default-logging
       max-file: "3"
 
 services:
-  # Landing page: serves the dashboard UI, reverse-proxies jellyfin/navidrome/
-  # per-service health + CPU/memory/disk-I/O usage read from the Docker
-  # socket, and is itself the tailnet entry point via tsnet (replacing the
-  # old standalone `tailscale` service). It also passes through
-  # Navidrome/Jellyfin's own ports directly on the tailnet for
-  # native apps that don't go through the dashboard's proxy.
-  landing:
-    build: ./landing
+  # Tailnet entry point: navidrome/jellyfin/immich share this container's
+  # network namespace, so each is reachable at
+  # http://${TS_HOSTNAME}:<its own port> on the tailnet.
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: ${TS_HOSTNAME}
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
-      - TS_HOSTNAME=${TS_HOSTNAME}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_AUTH_ONCE=true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - landing-tsnet-state:/var/lib/tsnet
-    depends_on:
-      - navidrome
-      - jellyfin
-      - immich
+      # Reuses the old tsnet node's state so this stays the same machine
+      # (same IP, same shares) on the tailnet.
+      - landing-tsnet-state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     restart: unless-stopped
     <<: *default-logging
 
   navidrome:
     image: deluan/navidrome:latest
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
     user: 501:20 # should be owner of volumes
     environment:
       ND_AGENTS: "apple-music,deezer,lastfm,listenbrainz"
@@ -49,6 +54,9 @@ services:
 
   jellyfin:
     image: jellyfin/jellyfin
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
     user: 501:20
     volumes:
       - ${JELLYFIN_DATA_PATH}/config:/config
